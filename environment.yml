@@ -267,3 +267,4 @@ dependencies:
   - zstd=1.5.7=hb8e6e7a_2
 
 prefix: "/home/refm_youssef/miniforge3/envs/popgen_env"
+  - sra-tools

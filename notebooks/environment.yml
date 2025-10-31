@@ -1,0 +1,10 @@
+name: popgen_env
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.10        # كنتبتو (Pin) بايثون
+  - pandas=1.5         # كنتبتو إصدار Pandas متوافق مع 3.10
+  - jupyterlab         # هذا مرن (flexible)
+  - snakemake-minimal=7  # كنطلبو الإصدار 7 ديال Snakemake (Minimal باش يكون خفيف)
+  - sra-tools          # هذا غيتوافق معاهم
