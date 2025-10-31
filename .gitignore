@@ -1,0 +1,11 @@
+--- .gitignore Rules ---
+# Ignore all raw data and results
+/data/*
+/results/*
+
+# But DO NOT ignore our clean metadata and figures
+
+# Ignore Jupyter checkpoints and Snakemake logs
+.ipynb_checkpoints/
+.snakemake/
+
