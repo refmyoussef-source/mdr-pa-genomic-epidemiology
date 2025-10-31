@@ -8,4 +8,5 @@
 # Ignore Jupyter checkpoints and Snakemake logs
 .ipynb_checkpoints/
 .snakemake/
-
+.results/qc/fastqc/
+.results/qc/multiqc_data/
