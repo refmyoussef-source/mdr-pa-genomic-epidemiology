@@ -1,6 +1,6 @@
 # ============================================
 # Snakefile: Project 5 MDR-PA Pipeline
-# VERSION 2.1 (Includes Download + QC - Syntax Fixed)
+# VERSION 3.0 (Includes Download + QC + Trimming)
 # ============================================
 
 # --- 1. Configuration (Load metadata) ---
@@ -13,68 +13,83 @@ SAMPLE_TO_RUN = metadata.set_index('sample_id')['run_id'].to_dict()
 # --- 2. Define All Final Files (Our "Goal" Rule) ---
 # ============================================
 
-# This is the "target" rule. We tell Snakemake what we want in the end.
-# Our NEW final goal is the MultiQC report
-FINAL_QC_REPORT = "results/qc/multiqc_report.html"
-
-# This helper function generates the list of 192 HTML files (96 samples * 2 reads)
-def get_fastqc_reports(wildcards):
+# --- (NEW) Our NEW final goal is the set of 192 TRIMMED reads ---
+def get_trimmed_reads(wildcards):
     return expand(
-        "results/qc/fastqc/{sample_id}_{read_pair}_fastqc.html",
+        "results/trimmed_reads/{sample_id}_{read_pair}.fastq.gz",
         sample_id=SAMPLES,
         read_pair=["1", "2"]
     )
 
 rule all:
     input:
-        # Our new goal is the final MultiQC report
-        FINAL_QC_REPORT
+        # Our new goal is the list of all trimmed fastq files
+        get_trimmed_reads
 
 # ============================================
 # --- 3. "Worker" Rules (How to build things) ---
 # ============================================
 
-# --- (Rule 3a) Rule to run MultiQC ---
-# This rule collects all FastQC reports into one summary
+# --- (NEW RULE - The "Operation") Rule to run fastp Trimming ---
+rule fastp_trimming:
+    input:
+        # It needs the RAW reads to start
+        r1 = "data/raw_reads/{sample_id}_1.fastq",
+        r2 = "data/raw_reads/{sample_id}_2.fastq"
+    output:
+        # It produces CLEANED (trimmed) reads
+        # We also .gz them to save space (113G -> ~20G)
+        r1_trimmed = "results/trimmed_reads/{sample_id}_1.fastq.gz",
+        r2_trimmed = "results/trimmed_reads/{sample_id}_2.fastq.gz",
+        # It also produces its own QC reports
+        html = "results/qc/fastp/{sample_id}.html",
+        json = "results/qc/fastp/{sample_id}.json"
+    params:
+        out_dir = "results/qc/fastp" # Directory for reports
+    shell:
+        """
+        echo "--- (STEP C) Running fastp Trimming on {wildcards.sample_id} ---"
+        # Ensure the output directories exist
+        mkdir -p results/trimmed_reads
+        mkdir -p {params.out_dir}
+        
+        # Run fastp
+        fastp \
+            -i {input.r1} \
+            -I {input.r2} \
+            -o {output.r1_trimmed} \
+            -O {output.r2_trimmed} \
+            -h {output.html} \
+            -j {output.json} \
+            --detect_adapter_for_pe # This is the "Diagnosis" we saw!
+        """
+
+# --- (OLD RULE) Rule to run MultiQC ---
+# (We leave this here, but it's no longer the "goal")
 rule multiqc:
     input:
-        get_fastqc_reports # Wait for all 192 fastqc reports
+        expand("results/qc/fastqc/{sample_id}_{read_pair}_fastqc.html", sample_id=SAMPLES, read_pair=["1", "2"])
     output:
-        FINAL_QC_REPORT     
+        "results/qc/multiqc_report.html"
     params:
-        # The folder where the reports are
         qc_dir = "results/qc/fastqc",
-        # Where to put the multiqc report
         out_dir = "results/qc"
     shell:
-        """
-        echo "--- (STEP C) Aggregating all FastQC reports with MultiQC ---"
-        multiqc {params.qc_dir} --outdir {params.out_dir}
-        """
+        "multiqc {params.qc_dir} --outdir {params.out_dir}"
 
-# --- (Rule 3b) Rule to run FastQC ---
-# This rule runs FastQC on *one* FASTQ file
+# --- (OLD RULE) Rule to run FastQC ---
 rule fastqc:
     input:
-        # {read_pair} will be "1" or "2"
         fastq = "data/raw_reads/{sample_id}_{read_pair}.fastq"
     output:
-        # It creates an HTML file
         html = "results/qc/fastqc/{sample_id}_{read_pair}_fastqc.html",
-        # And a zip file
         zip = "results/qc/fastqc/{sample_id}_{read_pair}_fastqc.zip"
     params:
-        # The output directory
         out_dir = "results/qc/fastqc"
     shell:
-        """
-        echo "--- (STEP B) Running FastQC on {input.fastq} ---"
-        # -o specifies the output directory
-        fastqc {input.fastq} -o {params.out_dir}
-        """
+        "fastqc {input.fastq} -o {params.out_dir}"
 
-# --- (Rule 3c) Rule to download data ---
-# (This rule is the same, but now FastQC *depends* on it)
+# --- (OLD RULE) Rule to download data ---
 rule download_sra_data:
     output:
         r1 = "data/raw_reads/{sample_id}_1.fastq",

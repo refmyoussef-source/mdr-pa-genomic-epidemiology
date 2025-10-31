@@ -8,5 +8,6 @@ dependencies:
   - jupyterlab
   - snakemake-minimal=7
   - sra-tools
-  - fastqc     # <-- NEW TOOL 1
-  - multiqc    # <-- NEW TOOL 2
+  - fastqc
+  - multiqc
+  - fastp      # <-- NEW TOOL
