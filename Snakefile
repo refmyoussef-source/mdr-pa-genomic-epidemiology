@@ -1,6 +1,6 @@
 # ============================================
 # Snakefile: Project 5 MDR-PA Pipeline
-# VERSION 3.0 (Includes Download + QC + Trimming)
+# VERSION 3.1 (Includes Download + QC + Trimming + Post-QC) # <-- V3.1
 # ============================================
 
 # --- 1. Configuration (Load metadata) ---
@@ -13,7 +13,7 @@ SAMPLE_TO_RUN = metadata.set_index('sample_id')['run_id'].to_dict()
 # --- 2. Define All Final Files (Our "Goal" Rule) ---
 # ============================================
 
-# --- (NEW) Our NEW final goal is the set of 192 TRIMMED reads ---
+# --- Our main goal is still the set of 192 TRIMMED reads ---
 def get_trimmed_reads(wildcards):
     return expand(
         "results/trimmed_reads/{sample_id}_{read_pair}.fastq.gz",
@@ -25,12 +25,18 @@ rule all:
     input:
         # Our new goal is the list of all trimmed fastq files
         get_trimmed_reads
+        
+        # --- (NEW V3.1) We ALSO add our new reports as "goals" ---
+        # This way, a simple "snakemake" will build them if missing,
+        # but "rule all" is still primarily about the reads.
+        # This is optional, but good practice.
+        # "results/qc/multiqc_report_fastp.html" # You can add this if you want
 
 # ============================================
 # --- 3. "Worker" Rules (How to build things) ---
 # ============================================
 
-# --- (NEW RULE - The "Operation") Rule to run fastp Trimming ---
+# --- Rule to run fastp Trimming ---
 rule fastp_trimming:
     input:
         # It needs the RAW reads to start
@@ -38,7 +44,6 @@ rule fastp_trimming:
         r2 = "data/raw_reads/{sample_id}_2.fastq"
     output:
         # It produces CLEANED (trimmed) reads
-        # We also .gz them to save space (113G -> ~20G)
         r1_trimmed = "results/trimmed_reads/{sample_id}_1.fastq.gz",
         r2_trimmed = "results/trimmed_reads/{sample_id}_2.fastq.gz",
         # It also produces its own QC reports
@@ -64,8 +69,29 @@ rule fastp_trimming:
             --detect_adapter_for_pe # This is the "Diagnosis" we saw!
         """
 
-# --- (OLD RULE) Rule to run MultiQC ---
-# (We leave this here, but it's no longer the "goal")
+# --- (NEW RULE V3.1) Rule to run MultiQC on FASTP results ---
+rule multiqc_fastp:
+    input:
+        # We need all 96 JSON reports from fastp
+        # (MultiQC prefers the .json files from fastp)
+        expand("results/qc/fastp/{sample_id}.json", sample_id=SAMPLES)
+    output:
+        # A new, clearly named master report
+        html = "results/qc/multiqc_report_fastp.html"
+    params:
+        report_dir = "results/qc/fastp",  # The directory where fastp reports live
+        out_dir = "results/qc"            # Where to put the final multiqc report
+    shell:
+        """
+        echo "--- (STEP D) Aggregating 96 fastp reports with MultiQC ---"
+        multiqc {params.report_dir} \
+            --outdir {params.out_dir} \
+            --filename multiqc_report_fastp.html \
+            --title "Project 5: Post-Trimming QC (fastp)"
+        """
+
+# --- (OLD RULE) Rule to run MultiQC (on FastQC results) ---
+# (We leave this here, it's our "Pre-QC" report)
 rule multiqc:
     input:
         expand("results/qc/fastqc/{sample_id}_{read_pair}_fastqc.html", sample_id=SAMPLES, read_pair=["1", "2"])
@@ -75,7 +101,7 @@ rule multiqc:
         qc_dir = "results/qc/fastqc",
         out_dir = "results/qc"
     shell:
-        "multiqc {params.qc_dir} --outdir {params.out_dir}"
+        "multiqc {params.qc_dir} --outdir {params.out_dir} --filename multiqc_report.html" # Added --filename for safety
 
 # --- (OLD RULE) Rule to run FastQC ---
 rule fastqc:
