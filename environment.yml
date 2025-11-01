@@ -11,3 +11,5 @@ dependencies:
   - fastqc
   - multiqc
   - fastp      # <-- NEW TOOL
+  - bwa-mem2    # <-- NEW (Phase 5: Mapping)
+  - samtools  # <-- NEW (Phase 5: Processing)
