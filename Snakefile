@@ -1,6 +1,6 @@
 # ============================================
 # Snakefile: Project 5 MDR-PA Pipeline
-# VERSION 4.2 (Includes Mapping/Sorting Automation)
+# VERSION 4.3 (Includes Mapping Stats QC)
 # ============================================
 
 # --- 1. Configuration (Load metadata) ---
@@ -9,15 +9,14 @@ metadata = pd.read_csv("results/metadata/metadata_clean.csv")
 SAMPLES = metadata["sample_id"].tolist()
 SAMPLE_TO_RUN = metadata.set_index('sample_id')['run_id'].to_dict()
 
-# --- [NEW V4.2] Define Reference Genome ---
+# --- [V4.2] Define Reference Genome ---
 REF_GENOME = "data/reference_genome/PAO1_reference.fna"
 
 # ============================================
 # --- 2. Define All Final Files (Our "Goal" Rule) ---
 # ============================================
 
-# --- [NEW V4.2] Our NEW final goal is the set of 96 INDEXED BAM files ---
-# (This is the result of "Test 4" from Notebook 03)
+# --- [V4.2] Our main goal is the set of 96 INDEXED BAM files ---
 def get_bam_indices(wildcards):
     return expand(
         "results/mapped_reads/{sample_id}.sorted.bam.bai",
@@ -26,13 +25,51 @@ def get_bam_indices(wildcards):
 
 rule all:
     input:
-        get_bam_indices
+        get_bam_indices,
+        # --- [NEW V4.3] We ALSO add our new Mapping QC report as a "goal" ---
+        "results/qc/mapping_stats/multiqc_mapping_stats.html"
 
 # ============================================
 # --- 3. "Worker" Rules (How to build things) ---
 # ============================================
 
-# --- [NEW RULE V4.2] - (From R&D Test 4) ---
+# --- [NEW RULE V4.3] Aggregate samtools stats with MultiQC ---
+# (This is Step F.2 - It feeds Notebook 04)
+rule multiqc_samtools_stats:
+    input:
+        expand("results/qc/mapping_stats/{sample_id}.stats", sample_id=SAMPLES)
+    output:
+        "results/qc/mapping_stats/multiqc_mapping_stats.html"
+    params:
+        stats_dir = "results/qc/mapping_stats",
+        out_dir = "results/qc/mapping_stats"
+    shell:
+        """
+        echo "--- (STEP F.2) Aggregating 96 Mapping Stats reports ---"
+        multiqc {params.stats_dir} \
+            --outdir {params.out_dir} \
+            --filename multiqc_mapping_stats.html \
+            --title "Project 5: Mapping QC (Samtools Stats)"
+        """
+
+# --- [NEW RULE V4.3] Generate samtools stats for each BAM ---
+# (This is Step F.1)
+rule samtools_stats:
+    input:
+        bam = "results/mapped_reads/{sample_id}.sorted.bam"
+    output:
+        stats = "results/qc/mapping_stats/{sample_id}.stats"
+    shell:
+        """
+        echo "--- (STEP F.1) Generating Mapping Stats for {wildcards.sample_id} ---"
+        # Create the directory first (Snakemake doesn't do this automatically for shell)
+        mkdir -p results/qc/mapping_stats
+        
+        # 'stats' command generates a text-based report
+        samtools stats {input.bam} > {output.stats}
+        """
+
+# --- [RULE V4.2] - (From R&D Test 4) ---
 # Creates the .bai index for each sorted BAM
 rule samtools_index:
     input:
@@ -45,7 +82,7 @@ rule samtools_index:
         samtools index {input.bam}
         """
 
-# --- [NEW RULE V4.2] - (From R&D Test 2+3) ---
+# --- [RULE V4.2] - (From R&D Test 2+3) ---
 # This is the main "Pipe" rule
 rule bwa_map_and_sort:
     input:
@@ -71,9 +108,8 @@ rule bwa_map_and_sort:
             | samtools sort -o {output.bam} -
         """
 
-# --- [NEW RULE V4.2] - (From R&D Test 1) ---
+# --- [RULE V4.2] - (From R&D Test 1) ---
 # This rule creates the BWA index.
-# It will run only ONCE, the first time it's needed.
 rule bwa_index:
     input:
         REF_GENOME
@@ -87,7 +123,6 @@ rule bwa_index:
 
 # ============================================
 # --- 4. "Legacy" Rules (Phase 1-4) ---
-# (We keep them here for reproducibility)
 # ============================================
 
 # --- (Rule V3.1) Rule to run MultiQC on FASTP results ---
