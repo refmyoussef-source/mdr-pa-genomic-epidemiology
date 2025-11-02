@@ -14,6 +14,8 @@ dependencies:
   - bwa-mem2    # <-- NEW (Phase 5: Mapping)
   - samtools  # <-- NEW (Phase 5: Processing)
   - bcftools    # <-- [NEW V4.4] Our tool for Phase 6 (Variant Calling)
-  - snp-sites   # <-- [THE FIX V5.2] The correct VCF-to-Alignment tool
-  - iqtree      # <-- [V5.2] Tool for Phase 8 (Tree Building)
+  - iqtree         # <-- [V5.3] Tool for Phase 8 (Tree Building)
+  
+  
+  
  
