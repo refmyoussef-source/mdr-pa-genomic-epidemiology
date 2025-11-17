@@ -56,7 +56,7 @@ This pipeline is managed by `Snakemake` and ensures 100% reproducibility. The "R
 
 1.  **Clone the repo:**
     ```bash
-    git clone [https://github.com/refmyoussef-source/mdr-pa-genomic-epidemiology.git](https://github.com/refmyoussef-source/mdr-pa-genomic-epidemiology.git)
+    git clone https://github.com/refmyoussef-source/mdr-pa-genomic-epidemiology.git
     cd mdr-pa-genomic-epidemiology
     ```
 2.  **Create the environment (V5.3):**
