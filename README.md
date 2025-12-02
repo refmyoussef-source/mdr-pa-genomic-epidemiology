@@ -39,7 +39,7 @@ This pipeline is managed by `Snakemake` and ensures 100% reproducibility. The "R
 
 ### Phase 6: Variant Calling (The "Haploid" Fix)
 * **Action:** `rule bcftools_call_haploid`
-* **Result:** **Critical Discovery:** The R&D test (documented in `Notebook 05`) revealed the default "diploid" assumption was scientifically wrong.
+* **Result:** **Critical Discovery:** The R&D test (documented in `Notebook 05`) revealed that the default "diploid" assumption was scientifically wrong.
 * **Action:** The pipeline was fixed to use `--ploidy 1` (Haploid) for bacterial genomics, generating 93 clean `.vcf.gz` files.
 
 ### Phase 7: Merging & Filtering (The "Golden File")
