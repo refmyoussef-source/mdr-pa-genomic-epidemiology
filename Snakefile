@@ -6,7 +6,7 @@
 # --- 1. Configuration (Load metadata) ---
 import pandas as pd
 
-# --- [V5.0] We manage TWO lists (Rule 4) ---
+# ---  We manage TWO lists (Rule 4) ---
 
 # The "Legacy" list of all 96 samples (for QC rules)
 metadata_all = pd.read_csv("results/metadata/metadata_clean.csv")
