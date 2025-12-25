@@ -24,7 +24,7 @@ REF_GENOME = "data/reference_genome/PAO1_reference.fna"
 # --- 2. Define All Final Files (Our "Goal" Rule) ---
 # ============================================
 
-# --- [NEW V6.0] Our NEW (and FINAL) goal is the ONE Analysis-Ready VCF ---
+# ---  Our NEW (and FINAL) goal is the ONE Analysis-Ready VCF ---
 # (This is the file for the Tree)
 rule all:
     input:
