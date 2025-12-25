@@ -245,7 +245,7 @@ rule fastqc:
     shell:
         "fastqc {input.fastq} -o {params.out_dir}"
 
-# --- (OLD RULE) Rule to download data ---
+# ---  Rule to download data ---
 rule download_sra_data:
     output:
         r1 = "data/raw_reads/{sample_id}_1.fastq",
