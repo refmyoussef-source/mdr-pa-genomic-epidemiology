@@ -1,6 +1,6 @@
 # ============================================
 # Snakefile: Project 5 MDR-PA Pipeline
-# VERSION 6.0 (Phase 7: Merging & Filtering Automation)
+# (Phase 7: Merging & Filtering Automation)
 # ============================================
 
 # --- 1. Configuration (Load metadata) ---
