@@ -17,7 +17,7 @@ SAMPLE_TO_RUN = metadata_all.set_index('sample_id')['run_id'].to_dict()
 metadata_clean = pd.read_csv("results/metadata/metadata_final_cohort.csv")
 CLEAN_SAMPLES = metadata_clean["sample_id"].tolist()
 
-# --- [V4.2] Define Reference Genome ---
+# ---  Define Reference Genome ---
 REF_GENOME = "data/reference_genome/PAO1_reference.fna"
 
 # ============================================
