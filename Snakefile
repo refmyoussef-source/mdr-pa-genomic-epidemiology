@@ -163,7 +163,7 @@ rule bwa_map_and_sort:
             | samtools sort -o {output.bam} -
         """
 
-# --- (Rule V4.2) This rule creates the BWA index.
+# ---  This rule creates the BWA index.
 rule bwa_index:
     input:
         REF_GENOME
