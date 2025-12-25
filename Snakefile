@@ -194,7 +194,7 @@ rule multiqc_fastp:
             --title "Project 5: Post-Trimming QC (fastp)"
         """
 
-# --- (Rule V3.0) Rule to run fastp Trimming ---
+# ---  Rule to run fastp Trimming ---
 rule fastp_trimming:
     input:
         r1 = "data/raw_reads/{sample_id}_1.fastq",
